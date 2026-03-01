@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>ExpiraTrack</title>
+  <link rel="icon" type="image/jpeg" href="Logo.jpeg">
+  <style>
+    /* ALL YOUR EXISTING CSS REMAINS EXACTLY THE SAME */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at center, #EAF7F1 0%, #FFFFFF 60%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* AMBIENT BACKGROUND GLOW */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(17,79,62,0.15), transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(80px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* INTRO SCREEN */
+    .intro-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: #FFFFFF;
+      overflow: hidden;
+      z-index: 2000;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .intro-screen.hide-intro {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .logo-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(420px, 80vw);
+      height: auto;
+    }
+
+    .logo {
+      position: absolute;
+      top: -180px;
+      left: 0;
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      object-position: left top;
+      transition: transform 1.5s ease-in-out;
+      pointer-events: none;
+    }
+
+    .logo.left {
+      clip-path: inset(0 45% 0 0);
+    }
+
+    .logo.right {
+      clip-path: inset(0 0 0 55%);
+    }
+
+    .logo-wrapper.split .logo.left {
+      transform: translateX(-320px);
+    }
+
+    .logo-wrapper.split .logo.right {
+      transform: translateX(320px);
+    }
+
+    @media (max-width: 700px) {
+      .logo-wrapper.split .logo.left {
+        transform: translateX(-25vw);
+      }
+      .logo-wrapper.split .logo.right {
+        transform: translateX(25vw);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo-wrapper.split .logo.left {
+        transform: translateX(-20vw);
+      }
+      .logo-wrapper.split .logo.right {
+        transform: translateX(20vw);
+      }
+    }
+
+    /* KEYFRAMES */
+    @keyframes fadeUp {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes floatOrb {
+      from { transform: translate(-50%, -55%); }
+      to { transform: translate(-50%, -45%); }
+    }
+
+    @keyframes rippleEffect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* LOGIN WRAPPER */
+    .login-wrapper {
+      width: min(760px, 92%);
+      height: 440px;
+      display: flex;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #FFFFFF;
+      box-shadow: 
+        0 40px 80px rgba(14,59,46,0.12),
+        0 15px 30px rgba(14,59,46,0.06),
+        0 5px 10px rgba(14,59,46,0.04);
+      border: 1px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      visibility: hidden;
+      z-index: 1000;
+      animation: fadeUp 0.5s ease forwards;
+      animation-play-state: paused;
+      transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .login-wrapper.wrapper-visible {
+      visibility: visible;
+      opacity: 1;
+      animation-play-state: running;
+    }
+
+    /* REGISTER MODE */
+    .login-wrapper.register-mode {
+      height: auto;
+      min-height: 520px;
+    }
+
+    .login-wrapper.register-mode .right-panel {
+      transform: translateX(100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .login-wrapper.register-mode .left-panel {
+      width: 100%;
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .login-wrapper.register-mode .login-form {
+      display: none;
+    }
+
+    .login-wrapper.register-mode .register-form {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    /* LEFT PANEL */
+    .left-panel {
+      width: 60%;
+      padding: 52px 48px 52px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #FFFFFF;
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* RIGHT PANEL */
+    .right-panel {
+      width: 40%;
+      background: linear-gradient(145deg, #0C3A2C, #114F3E, #0F4737);
+      background-size: 200% 200%;
+      animation: gradientShift 14s ease infinite;
+      position: relative;
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 25px;
+      transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      text-align: center;
+    }
+
+    .right-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent 40%);
+      pointer-events: none;
+    }
+
+    .right-panel::after {
+      content: '';
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(60px);
+      animation: floatOrb 10s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .right-logo {
+      width: 70px;
+      margin-bottom: 18px;
+      display: block;
+      z-index: 10;
+      position: relative;
+    }
+
+    .form-logo {
+      display: none;
+    }
+
+    .left-panel h2 {
+      font-size: 22px;
+      font-weight: 500;
+      color: #0B3D2E;
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-delay: 0.15s;
+      animation-play-state: paused;
+    }
+
+    .login-wrapper.wrapper-visible .left-panel h2 {
+      animation-play-state: running;
+    }
+
+    .input-group {
+      width: 100%;
+      margin-bottom: 22px;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-play-state: paused;
+    }
+
+    .input-group:nth-of-type(1) {
+      animation-delay: 0.2s;
+    }
+
+    .input-group:nth-of-type(2) {
+      animation-delay: 0.25s;
+    }
+
+    .login-wrapper.wrapper-visible .input-group {
+      animation-play-state: running;
+    }
+
+    .input-group input {
+      position: relative;
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid #E6ECEA;
+      border-radius: 10px;
+      background: #F9FBFA;
+      font-size: 14px;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      font-family: inherit;
+      background-image: linear-gradient(#114F3E, #114F3E);
+      background-repeat: no-repeat;
+      background-size: 0% 2px;
+      background-position: left bottom;
+      transition: background-size 0.3s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .input-group input:hover {
+      border-color: #D1E7DD;
+    }
+
+    .input-group input:focus {
+      border-color: #114F3E;
+      box-shadow: 0 0 0 3px rgba(13,59,46,0.12);
+      outline: none;
+      background-color: #FFFFFF;
+      background-image: linear-gradient(#114F3E, #114F3E);
+      background-repeat: no-repeat;
+      background-size: 100% 2px;
+      background-position: left bottom;
+    }
+
+    .input-group input::placeholder {
+      color: #9AA6A0;
+      opacity: 0.7;
+    }
+
+    .login-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #0E3B2E, #0C3328);
+      border: none;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow:
+        0 8px 18px rgba(14,59,46,0.18),
+        0 2px 6px rgba(0,0,0,0.08);
+      transition:
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.3s ease;
+      overflow: hidden;
+      margin-top: 8px;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-delay: 0.3s;
+      animation-play-state: paused;
+      will-change: transform;
+    }
+
+    .login-wrapper.wrapper-visible .login-btn {
+      animation-play-state: running;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-5px);
+      box-shadow:
+        0 18px 35px rgba(14,59,46,0.30),
+        0 8px 15px rgba(0,0,0,0.12);
+      filter: brightness(1.05);
+    }
+
+    .login-btn:active {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 18px rgba(14,59,46,0.22);
+    }
+
+    .login-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .login-btn:hover::after {
+      opacity: 1;
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      margin-top: 16px;
+      font-size: 12.5px;
+      color: #145A43;
+      opacity: 0.85;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-delay: 0.35s;
+      animation-play-state: paused;
+    }
+
+    .login-wrapper.wrapper-visible .forgot-link {
+      animation-play-state: running;
+    }
+
+    .forgot-link:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .divider-or {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 28px 0 16px;
+      color: #9AA6A0;
+      font-size: 12px;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-delay: 0.4s;
+      animation-play-state: paused;
+    }
+
+    .login-wrapper.wrapper-visible .divider-or {
+      animation-play-state: running;
+    }
+
+    .divider-or::before,
+    .divider-or::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #E2ECE8;
+      opacity: 0.8;
+    }
+
+    .divider-or::before {
+      margin-right: 14px;
+    }
+
+    .divider-or::after {
+      margin-left: 14px;
+    }
+
+    .account-prompt {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0 8px;
+      font-size: 14px;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-delay: 0.45s;
+      animation-play-state: paused;
+      line-height: 1.5;
+    }
+
+    .login-wrapper.wrapper-visible .account-prompt {
+      animation-play-state: running;
+    }
+
+    .prompt-text {
+      color: #6B7280;
+    }
+
+    .create-link {
+      color: #145A43;
+      font-weight: 500;
+      margin-left: 6px;
+      text-decoration: none;
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .create-link:hover {
+      color: #0E3B2E;
+      text-decoration: underline;
+    }
+
+    .trust-note {
+      font-size: 12px;
+      color: #145A43;
+      opacity: 0.8;
+      text-align: center;
+      margin-top: 8px;
+      padding-top: 18px;
+      border-top: 1px solid #E2ECE8;
+      letter-spacing: 0.2px;
+      animation: fadeUp 0.4s ease forwards;
+      opacity: 0;
+      animation-delay: 0.5s;
+      animation-play-state: paused;
+    }
+
+    .login-wrapper.wrapper-visible .trust-note {
+      animation-play-state: running;
+    }
+
+    /* NAV LINK STYLES */
+    .nav-link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      color: #145A43;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .nav-link:hover {
+      color: #0E3B2E;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover .nav-icon {
+      transform: translateX(-4px);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 0%;
+      height: 1.5px;
+      background: #145A43;
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .nav-link .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: rippleEffect 0.6s linear;
+      background: rgba(20,90,67,0.25);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* FORM SECTIONS */
+    .form-section {
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .fade-out {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .fade-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* REGISTER FORM */
+    .login-form {
+      display: block;
+    }
+
+    .register-form {
+      display: none;
+      width: 100%;
+      position: relative;
+      min-height: 420px;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .step-one, .step-two {
+      width: 100%;
+    }
+
+    .step-two {
+      display: none;
+    }
+
+    .step-two.register-step-active {
+      display: block;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    .register-form h2 {
+      font-size: 22px;
+      font-weight: 500;
+      color: #0B3D2E;
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+      text-align: left;
+    }
+
+    .next-btn, .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #0E3B2E, #0C3328);
+      border: none;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow:
+        0 8px 18px rgba(14,59,46,0.18),
+        0 2px 6px rgba(0,0,0,0.08);
+      transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        filter 0.3s ease;
+      margin-top: 15px;
+      will-change: transform;
+    }
+
+    .next-btn:hover, .submit-btn:hover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 18px 35px rgba(14,59,46,0.30),
+        0 8px 15px rgba(0,0,0,0.12);
+      filter: brightness(1.05);
+    }
+
+    .next-btn:active, .submit-btn:active {
+      transform: translateY(-2px);
+    }
+
+    .back-link {
+      display: block;
+      width: 100%;
+      text-align: center;
+      margin-top: 18px;
+      font-size: 14px;
+      color: #145A43;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+     
+    .back-link:hover {
+      color: #0E3B2E;
+      text-decoration: underline;
+    }
+
+    /* ERROR MESSAGES */
+    .error-message {
+      font-size: 12px;
+      color: #D93025;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .input-error {
+      border-color: #D93025 !important;
+      box-shadow: 0 0 0 3px rgba(217,48,37,0.15) !important;
+    }
+
+    .welcome-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: #FFFFFF;
+      text-align: center;
+      line-height: 1.4;
+      opacity: 1;
+      text-shadow: 0 0 12px rgba(255,255,255,0.15), 0 0 30px rgba(255,255,255,0.08);
+    }
+
+    .welcome-text {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      line-height: 1.6;
+      text-align: center;
+      max-width: 160px;
+      color: #FFFFFF;
+    }
+
+    .green-divider {
+      width: 40px;
+      height: 3px;
+      background: #EAF7F1;
+      margin: 14px auto 18px;
+      border-radius: 2px;
+      opacity: 0.3;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 700px) {
+      .login-wrapper {
+        flex-direction: column;
+        height: auto;
+        width: 92%;
+        max-width: 480px;
+      }
+
+      .left-panel, .right-panel {
+        width: 100%;
+        padding: 40px 30px;
+      }
+
+      .login-wrapper.register-mode .left-panel {
+        width: 100%;
+      }
+
+      .right-panel {
+        border-radius: 0 0 18px 18px;
+      }
+
+      .left-panel h2 {
+        font-size: 20px;
+      }
+
+      .welcome-title {
+        font-size: 20px;
+      }
+      
+      .welcome-text {
+        max-width: 240px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .left-panel, .right-panel {
+        padding: 30px 25px;
+      }
+    }
+
+    /* NETWORK LOADER */
+    .network-loader{
+      position:fixed;
+      inset:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:9999;
+      background:rgba(255,255,255,0.45);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      box-shadow:inset 0 0 120px rgba(0,0,0,0.05);
+      opacity:0;
+      visibility:hidden;
+      transition:opacity .3s ease,visibility .3s ease
+    }
+    .network-loader.active{
+      opacity:1;
+      visibility:visible
+    }
+    .network-loader-center{
+      position:relative;
+      text-align:center;
+      animation:softScale 2s ease-in-out infinite
+    }
+    .loader-glow{
+      position:absolute;
+      width:160px;
+      height:160px;
+      background:radial-gradient(circle,rgba(17,79,62,.15),transparent 70%);
+      border-radius:50%;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      animation:pulseGlow 2s ease-in-out infinite
+    }
+    .network-ring{
+      position:absolute;
+      top:50%;
+      left:50%;
+      width:120px;
+      height:120px;
+      border:3px solid rgba(17,79,62,.12);
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      animation:slowSpin 3s linear infinite
+    }
+    .network-ring::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      border:3px solid transparent;
+      border-top:3px solid #114F3E;
+      animation:fastSpin 1s linear infinite
+    }
+    @keyframes slowSpin{
+      to{transform:translate(-50%,-50%) rotate(360deg)}
+    }
+    @keyframes fastSpin{
+      to{transform:rotate(360deg)}
+    }
+    @keyframes pulseGlow{
+      0%{opacity:.6}
+      50%{opacity:1}
+      100%{opacity:.6}
+    }
+    @keyframes softScale{
+      0%{transform:scale(1)}
+      50%{transform:scale(1.05)}
+      100%{transform:scale(1)}
+    }
+    .network-text{
+      margin-top:140px;
+      font-size:14px;
+      color:#0E3B2E;
+      font-weight:500;
+      letter-spacing:.3px
+    }
+    body.loading-active>*:not(.network-loader){
+      filter:blur(5px);
+      transition:filter .3s ease
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INTRO SCREEN -->
+  <div class="intro-screen" id="introScreen">
+    <div class="logo-wrapper" id="logoWrapper">
+      <img src="Logo.jpeg" alt="logo left" class="logo left" loading="eager">
+      <img src="Logo.jpeg" alt="logo right" class="logo right" loading="eager">
+    </div>
+  </div>
+
+  <!-- NETWORK LOADER -->
+  <div class="network-loader" id="networkLoader">
+    <div class="network-loader-center">
+      <div class="loader-glow"></div>
+      <div class="network-ring"></div>
+      <p class="network-text">Refreshing freshness data...</p>
+    </div>
+  </div>
+
+  <!-- LOGIN WRAPPER -->
+  <div class="login-wrapper" id="loginWrapper">
+    <!-- left panel -->
+    <div class="left-panel">
+      <!-- LOGIN FORM -->
+      <div class="login-form form-section">
+        <h2>Welcome</h2>
+
+        <div class="input-group">
+          <input type="email" placeholder="Email address" aria-label="Email" id="loginEmail">
+          <div class='error-message' id='emailError'>Invalid email address</div>
+        </div>
+        <div class="input-group">
+          <input type="password" placeholder="Password" aria-label="Password" id="loginPassword">
+        </div>
+
+        <button class="login-btn">Sign In</button>
+        <a href="#" class="forgot-link">Forgot password?</a>
+
+        <div class="divider-or">OR</div>
+
+        <div class="account-prompt">
+          <span class="prompt-text">Don't have an account?</span>
+          <span class="create-link" id="createLink">Create new account</span>
+        </div>
+
+        <div class="trust-note">
+          🔒 Secured with enterprise‑grade encryption
+        </div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="register-form form-section" id="registerForm">
+        <a href="#" class="nav-link" id="registerLoginLink">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+          <span>Login</span>
+        </a>
+        
+        <!-- Step One -->
+        <div class="step-one" id="stepOne">
+          <h2>Create Account</h2>
+          
+          <div class="input-group">
+            <input type="text" placeholder="Full Name" aria-label="Full Name" id="fullName">
+          </div>
+          <div class="input-group">
+            <input type="text" placeholder="Shop Name" aria-label="Shop Name" id="shopName">
+          </div>
+          <div class="input-group">
+            <input type="text" placeholder="Place" aria-label="Place" id="place">
+          </div>
+          <div class="input-group">
+            <input type="email" placeholder="Email Address" aria-label="Email" id="stepOneEmail">
+          </div>
+          <div class='error-message' id='stepOneEmailError'>Invalid email address</div>
+          
+          <button class="next-btn" id="nextBtn">Next</button>
+        </div>
+        
+        <!-- Step Two -->
+        <div class="step-two" id="stepTwo">
+          <h2>Almost Done</h2>
+          
+          <div class="input-group">
+            <input type="tel" placeholder="Phone Number" aria-label="Phone Number" id="phoneInput">
+          </div>
+          <div class='error-message' id='phoneError'>Phone must be 10 digits starting 5-9</div>
+          
+          <div class="input-group">
+            <input type="password" placeholder="Create Password" aria-label="Password" id="password">
+          </div>
+          <div class="input-group">
+            <input type="password" placeholder="Confirm Password" aria-label="Confirm Password" id="confirmPassword">
+          </div>
+          
+          <button class="submit-btn" id="submitBtn">Submit</button>
+          
+          <a href="#" class="nav-link back-link" id="backToStepOne" style="display: block; width: 100%; text-align: center; justify-content: center;">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            <span>Back</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- right panel -->
+    <div class="right-panel">
+      <img src="Logo.jpeg" alt="ExpiraTrack Logo" class="right-logo">
+      <div class="welcome-title">ExpiraTrack</div>
+      <div class="green-divider"></div>
+      <p class="welcome-text">Track Freshness. Prevent Waste.</p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+      
+      // API base URL
+      const API_BASE_URL = 'http://localhost:5000';
+      
+      // DOM Elements
+      const intro = document.getElementById('introScreen');
+      const wrapper = document.getElementById('logoWrapper');
+      const loginWrapper = document.getElementById('loginWrapper');
+      const loginForm = document.querySelector('.login-form');
+      const registerForm = document.getElementById('registerForm');
+      const createLink = document.getElementById('createLink');
+      const registerLoginLink = document.getElementById('registerLoginLink');
+      
+      // Form elements
+      const loginEmail = document.getElementById('loginEmail');
+      const loginPassword = document.getElementById('loginPassword');
+      const emailError = document.getElementById('emailError');
+      const stepOne = document.getElementById('stepOne');
+      const stepTwo = document.getElementById('stepTwo');
+      const fullName = document.getElementById('fullName');
+      const shopName = document.getElementById('shopName');
+      const place = document.getElementById('place');
+      const stepOneEmail = document.getElementById('stepOneEmail');
+      const stepOneEmailError = document.getElementById('stepOneEmailError');
+      const phoneInput = document.getElementById('phoneInput');
+      const phoneError = document.getElementById('phoneError');
+      const password = document.getElementById('password');
+      const confirmPassword = document.getElementById('confirmPassword');
+      const nextBtn = document.getElementById('nextBtn');
+      const backToStepOne = document.getElementById('backToStepOne');
+      const submitBtn = document.getElementById('submitBtn');
+      const loginBtn = document.querySelector('.login-btn');
+
+      // Initialize the app
+      function init() {
+        if (!intro || !wrapper || !loginWrapper) return;
+
+        // Start intro animation
+        setTimeout(() => {
+          wrapper.classList.add('split');
+
+          setTimeout(() => {
+            intro.classList.add('hide-intro');
+            loginWrapper.classList.add('wrapper-visible');
+            
+            // Setup all event listeners after UI is visible
+            setupEventListeners();
+            
+          }, 1500);
+        }, 2000);
+      }
+
+      // Setup all event listeners
+      function setupEventListeners() {
+        // Magnetic button effect
+        setupMagneticButton();
+        
+        // Email validation
+        setupEmailValidation();
+        
+        // Register mode transitions
+        setupRegisterMode();
+        
+        // 2-step onboarding
+        setupOnboarding();
+        
+        // Form submissions
+        setupFormSubmissions();
+        
+        // Ripple effects
+        setupRippleEffects();
+      }
+
+      // Magnetic button effect
+      function setupMagneticButton() {
+        if (loginBtn) {
+          loginBtn.addEventListener('mousemove', (e) => {
+            const rect = loginBtn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            loginBtn.style.transform = `translate(${x * 0.05}px, ${y * 0.05}px)`;
+          });
+
+          loginBtn.addEventListener('mouseleave', () => {
+            loginBtn.style.transform = '';
+          });
+        }
+      }
+
+      // Email validation
+      function setupEmailValidation() {
+        function validateEmail(email) {
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return regex.test(email);
+        }
+        
+        if (loginEmail && emailError) {
+          loginEmail.addEventListener('blur', function() {
+            const value = loginEmail.value.trim();
+            
+            if (value && !validateEmail(value)) {
+              loginEmail.classList.add('input-error');
+              emailError.innerText = 'Please enter a valid email address';
+              emailError.style.display = 'block';
+            } else {
+              loginEmail.classList.remove('input-error');
+              emailError.style.display = 'none';
+            }
+          });
+        }
+      }
+
+      // Register mode transitions
+      function setupRegisterMode() {
+        if (createLink) {
+          createLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            if (loginForm && registerForm) {
+              loginForm.classList.add('fade-out');
+              
+              setTimeout(() => {
+                loginWrapper.classList.add('register-mode');
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'flex';
+                
+                stepOne.style.display = 'block';
+                stepTwo.style.display = 'none';
+                stepTwo.classList.remove('register-step-active');
+                
+                // Reset validation
+                if (stepOneEmail) {
+                  stepOneEmail.classList.remove('input-error');
+                  stepOneEmailError.style.display = 'none';
+                }
+                if (phoneInput) {
+                  phoneInput.classList.remove('input-error');
+                  phoneError.style.display = 'none';
+                }
+                
+                setTimeout(() => {
+                  registerForm.classList.add('fade-in');
+                }, 50);
+                
+                loginForm.classList.remove('fade-out');
+              }, 300);
+            }
+          });
+        }
+        
+        if (registerLoginLink) {
+          registerLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            registerForm.classList.add('fade-out');
+            
+            setTimeout(() => {
+              loginWrapper.classList.remove('register-mode');
+              
+              stepOne.style.display = 'block';
+              stepTwo.style.display = 'none';
+              stepTwo.classList.remove('register-step-active');
+              
+              if (stepOneEmail) {
+                stepOneEmail.classList.remove('input-error');
+                stepOneEmailError.style.display = 'none';
+              }
+              if (phoneInput) {
+                phoneInput.classList.remove('input-error');
+                phoneError.style.display = 'none';
+              }
+              
+              loginForm.style.display = 'block';
+              registerForm.style.display = 'none';
+              
+              setTimeout(() => {
+                loginForm.classList.add('fade-in');
+              }, 50);
+              
+              registerForm.classList.remove('fade-out');
+            }, 300);
+          });
+        }
+      }
+
+      // 2-step onboarding logic
+      function setupOnboarding() {
+        function validateEmailFormat(email) {
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return regex.test(email);
+        }
+        
+        function simulateEmailVerification(email) {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              if (email.includes('test') || email.includes('fake') || email.includes('invalid')) {
+                resolve(false);
+              } else {
+                resolve(true);
+              }
+            }, 800);
+          });
+        }
+        
+        // Email validation on blur
+        if (stepOneEmail && stepOneEmailError) {
+          stepOneEmail.addEventListener('blur', async function() {
+            const value = stepOneEmail.value.trim();
+            
+            if (!value) {
+              stepOneEmail.classList.remove('input-error');
+              stepOneEmailError.style.display = 'none';
+              return;
+            }
+            
+            if (!validateEmailFormat(value)) {
+              stepOneEmail.classList.add('input-error');
+              stepOneEmailError.innerText = 'Invalid email format';
+              stepOneEmailError.style.display = 'block';
+              return;
+            }
+            
+            const isValid = await simulateEmailVerification(value);
+            
+            if (!isValid) {
+              stepOneEmail.classList.add('input-error');
+              stepOneEmailError.innerText = 'Email does not appear valid';
+              stepOneEmailError.style.display = 'block';
+            } else {
+              stepOneEmail.classList.remove('input-error');
+              stepOneEmailError.style.display = 'none';
+            }
+          });
+        }
+        
+        // Phone validation
+        if (phoneInput && phoneError) {
+          phoneInput.addEventListener('blur', function() {
+            const value = phoneInput.value.trim();
+            const phoneRegex = /^[5-9][0-9]{9}$/;
+            
+            if (value && !phoneRegex.test(value)) {
+              phoneInput.classList.add('input-error');
+              phoneError.style.display = 'block';
+            } else {
+              phoneInput.classList.remove('input-error');
+              phoneError.style.display = 'none';
+            }
+          });
+        }
+        
+        // Next button
+        if (nextBtn) {
+          nextBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // Validate required fields in step one
+            if (!fullName.value.trim()) {
+              fullName.classList.add('input-error');
+              setTimeout(() => fullName.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            if (!shopName.value.trim()) {
+              shopName.classList.add('input-error');
+              setTimeout(() => shopName.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            if (!place.value.trim()) {
+              place.classList.add('input-error');
+              setTimeout(() => place.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            const emailValue = stepOneEmail ? stepOneEmail.value.trim() : '';
+            
+            if (!emailValue) {
+              stepOneEmail.classList.add('input-error');
+              stepOneEmailError.innerText = 'Email is required';
+              stepOneEmailError.style.display = 'block';
+              return;
+            }
+            
+            if (!validateEmailFormat(emailValue)) {
+              stepOneEmail.classList.add('input-error');
+              stepOneEmailError.innerText = 'Invalid email format';
+              stepOneEmailError.style.display = 'block';
+              return;
+            }
+            
+            const isValid = await simulateEmailVerification(emailValue);
+            
+            if (!isValid) {
+              stepOneEmail.classList.add('input-error');
+              stepOneEmailError.innerText = 'Email does not appear valid';
+              stepOneEmailError.style.display = 'block';
+              return;
+            }
+            
+            stepOneEmail.classList.remove('input-error');
+            stepOneEmailError.style.display = 'none';
+            
+            stepOne.classList.add('fade-out');
+            
+            setTimeout(() => {
+              stepOne.style.display = 'none';
+              stepTwo.style.display = 'block';
+              stepTwo.classList.add('register-step-active');
+              
+              setTimeout(() => {
+                stepTwo.classList.add('fade-in');
+              }, 50);
+              
+              stepOne.classList.remove('fade-out');
+            }, 300);
+          });
+        }
+        
+        // Back to step one
+        if (backToStepOne) {
+          backToStepOne.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            stepTwo.classList.add('fade-out');
+            
+            setTimeout(() => {
+              stepTwo.style.display = 'none';
+              stepTwo.classList.remove('register-step-active');
+              stepOne.style.display = 'block';
+              
+              setTimeout(() => {
+                stepOne.classList.add('fade-in');
+              }, 50);
+              
+              stepTwo.classList.remove('fade-out');
+            }, 300);
+          });
+        }
+      }
+
+      // Form submissions with API integration
+      function setupFormSubmissions() {
+        // Register form submission - FIXED VERSION
+        if (submitBtn) {
+          const newSubmitBtn = submitBtn.cloneNode(true);
+          submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+          
+          newSubmitBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // Check if step two is visible
+            if (stepTwo.style.display !== 'block' && !stepTwo.classList.contains('register-step-active')) {
+              return;
+            }
+            
+            // Get form values
+            const full_name = fullName.value.trim();  // ← FIXED: changed from 'name' to 'full_name'
+            const shop_name = shopName.value.trim();
+            const placeValue = place.value.trim() || 'Not set';  // ← FIXED: renamed to placeValue to avoid conflict
+            const email = stepOneEmail.value.trim();
+            const phone = phoneInput.value.trim();
+            const passwordValue = password.value;
+            const confirmPasswordValue = confirmPassword.value;
+            
+            // Reset error messages
+            stepOneEmailError.style.display = 'none';
+            phoneError.style.display = 'none';
+            stepOneEmail.classList.remove('input-error');
+            phoneInput.classList.remove('input-error');
+            
+            // Validate required fields
+            if (!full_name) {
+              alert('Full Name is required');
+              fullName.classList.add('input-error');
+              setTimeout(() => fullName.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            if (!shop_name) {
+              alert('Shop Name is required');
+              shopName.classList.add('input-error');
+              setTimeout(() => shopName.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            if (!email) {
+              alert('Email is required');
+              stepOneEmail.classList.add('input-error');
+              stepOneEmailError.innerText = 'Email is required';
+              stepOneEmailError.style.display = 'block';
+              return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              stepOneEmailError.innerText = 'Invalid email format';
+              stepOneEmailError.style.display = 'block';
+              stepOneEmail.classList.add('input-error');
+              return;
+            }
+            
+            if (!phone) {
+              alert('Phone Number is required');
+              phoneInput.classList.add('input-error');
+              phoneError.innerText = 'Phone number is required';
+              phoneError.style.display = 'block';
+              return;
+            }
+            
+            // Validate phone (10 digits starting with 5-9)
+            const phoneRegex = /^[5-9][0-9]{9}$/;
+            if (!phoneRegex.test(phone)) {
+              phoneError.style.display = 'block';
+              phoneInput.classList.add('input-error');
+              return;
+            }
+            
+            if (!passwordValue) {
+              alert('Password is required');
+              password.classList.add('input-error');
+              setTimeout(() => password.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            if (!confirmPasswordValue) {
+              alert('Please confirm your password');
+              confirmPassword.classList.add('input-error');
+              setTimeout(() => confirmPassword.classList.remove('input-error'), 2000);
+              return;
+            }
+            
+            // Validate passwords match
+            if (passwordValue !== confirmPasswordValue) {
+              alert('Passwords do not match');
+              return;
+            }
+            
+            // Validate password strength
+            if (passwordValue.length < 8 || !/[A-Za-z]/.test(passwordValue) || !/\d/.test(passwordValue)) {
+              alert('Password must be at least 8 characters with letters and numbers');
+              return;
+            }
+            
+            // Activate network loader
+            const networkLoader = document.getElementById('networkLoader');
+            document.body.classList.add('loading-active');
+            if (networkLoader) {
+              networkLoader.classList.add('active');
+            }
+            
+            newSubmitBtn.disabled = true;
+            newSubmitBtn.textContent = 'Creating Account...';
+            
+            try {
+              // Prepare data exactly as your backend expects
+              const userData = {
+                full_name: full_name,  // ← FIXED: using 'full_name' to match backend
+                shop_name: shop_name,
+                place: placeValue,      // ← FIXED: using placeValue variable
+                email: email,
+                phone: phone,
+                password: passwordValue
+              };
+              
+              console.log('📤 Sending registration data:', userData);
+              
+              const response = await fetch(`${API_BASE_URL}/api/register`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+              });
+              
+              const data = await response.json();
+              console.log('📥 Registration response:', data);
+              
+              if (response.status === 201 || response.status === 200) {
+                // Store user data if returned
+                if (data.token) {
+                  localStorage.setItem('token', data.token);
+                }
+                if (data.user) {
+                  localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                
+                // Show success message
+                alert('Account created successfully! Please login.');
+                
+                // Return to login form
+                registerForm.classList.add('fade-out');
+                setTimeout(() => {
+                  loginWrapper.classList.remove('register-mode');
+                  stepOne.style.display = 'block';
+                  stepTwo.style.display = 'none';
+                  stepTwo.classList.remove('register-step-active');
+                  
+                  // Reset form
+                  fullName.value = '';
+                  shopName.value = '';
+                  place.value = '';
+                  stepOneEmail.value = '';
+                  phoneInput.value = '';
+                  password.value = '';
+                  confirmPassword.value = '';
+                  
+                  loginForm.style.display = 'block';
+                  registerForm.style.display = 'none';
+                  registerForm.classList.remove('fade-out');
+                  
+                  // Pre-fill email for easy login
+                  loginEmail.value = email;
+                }, 300);
+              } else {
+                // Show error from server
+                if (data.field === 'email') {
+                  stepOneEmailError.innerText = data.message || 'Email already exists';
+                  stepOneEmailError.style.display = 'block';
+                  stepOneEmail.classList.add('input-error');
+                } else if (data.field === 'phone') {
+                  phoneError.innerText = data.message || 'Phone number already exists';
+                  phoneError.style.display = 'block';
+                  phoneInput.classList.add('input-error');
+                } else {
+                  alert(data.message || 'Registration failed. Please try again.');
+                }
+              }
+            } catch (error) {
+              console.error('❌ Registration error:', error);
+              alert('Network error. Please check your connection to the server.');
+            } finally {
+              // Hide loader
+              document.body.classList.remove('loading-active');
+              if (networkLoader) {
+                networkLoader.classList.remove('active');
+              }
+              newSubmitBtn.disabled = false;
+              newSubmitBtn.textContent = 'Submit';
+            }
+          });
+        }
+        
+        // Login form submission
+        if (loginBtn) {
+          loginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const email = loginEmail.value.trim();
+            const passwordValue = loginPassword.value.trim();
+            
+            if (!email || !passwordValue) {
+              emailError.innerText = 'Please enter both email and password';
+              emailError.style.display = 'block';
+              loginEmail.classList.add('input-error');
+              return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              emailError.innerText = 'Invalid email format';
+              emailError.style.display = 'block';
+              loginEmail.classList.add('input-error');
+              return;
+            }
+            
+            // Activate network loader before fetch
+            const networkLoader = document.getElementById('networkLoader');
+            document.body.classList.add('loading-active');
+            if (networkLoader) {
+              networkLoader.classList.add('active');
+            }
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing In...';
+            
+            try {
+              const response = await fetch(`${API_BASE_URL}/api/login`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password: passwordValue })
+              });
+              
+              const data = await response.json();
+              
+              if (response.status === 200) {
+                // Store user data
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                // Keep loader active and redirect
+                setTimeout(() => {
+                  window.location.href = '/dashboard.html';
+                }, 1200);
+              } else {
+                // Deactivate loader on error
+                document.body.classList.remove('loading-active');
+                const networkLoader = document.getElementById('networkLoader');
+                if (networkLoader) {
+                  networkLoader.classList.remove('active');
+                }
+                
+                emailError.innerText = data.message || 'Login failed. Please try again.';
+                emailError.style.display = 'block';
+                loginEmail.classList.add('input-error');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+              }
+            } catch (error) {
+              // Deactivate loader on network error
+              document.body.classList.remove('loading-active');
+              const networkLoader = document.getElementById('networkLoader');
+              if (networkLoader) {
+                networkLoader.classList.remove('active');
+              }
+              
+              console.error('Login error:', error);
+              emailError.innerText = 'Network error. Please check connection.';
+              emailError.style.display = 'block';
+              loginEmail.classList.add('input-error');
+              loginBtn.disabled = false;
+              loginBtn.textContent = 'Sign In';
+            }
+          });
+        }
+      }
+
+      // Ripple effects for nav links
+      function setupRippleEffects() {
+        document.querySelectorAll('.nav-link').forEach(link => {
+          link.addEventListener('click', function(e) {
+            const circle = document.createElement('span');
+            const diameter = Math.max(this.clientWidth, this.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${e.clientX - this.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${e.clientY - this.getBoundingClientRect().top - radius}px`;
+            circle.classList.add('ripple');
+            
+            const ripple = this.getElementsByClassName('ripple')[0];
+            if (ripple) ripple.remove();
+            
+            this.appendChild(circle);
+            
+            setTimeout(() => {
+              if (circle && circle.parentNode) {
+                circle.remove();
+              }
+            }, 600);
+          });
+        });
+      }
+
+      // Start the app
+      init();
+    })();
+  </script>
+</body>
+</html>
